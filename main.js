@@ -10,12 +10,44 @@ const app = new pc.Application(canvas, {
 });
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
+app.scene.shadowType = pc.SHADOW_PCF3;
+app.scene.gsplat.alphaClip = 0.4;
 
 const camera = new pc.Entity('Viewer Camera');
 camera.addComponent('camera', {
   clearColor: new pc.Color(0.055,0.075,0.09), fov: 55, nearClip: 0.01, farClip: 100000
 });
 app.root.addChild(camera);
+
+// A neutral ground plane gives the splat a visual reference and receives its shadows.
+const floor = new pc.Entity('Ground Floor');
+floor.addComponent('render', { type: 'plane' });
+floor.setLocalScale(200, 1, 200);
+floor.setLocalPosition(0, -1, 0);
+const floorMaterial = new pc.StandardMaterial();
+floorMaterial.diffuse = new pc.Color(0.22, 0.27, 0.30);
+floorMaterial.metalness = 0;
+floorMaterial.gloss = 8;
+floorMaterial.useLighting = true;
+floorMaterial.update();
+floor.render.material = floorMaterial;
+floor.render.receiveShadows = true;
+floor.render.castShadows = false;
+app.root.addChild(floor);
+
+// Directional sunlight: GSplats cast shadows when both the splat and light enable it.
+const sun = new pc.Entity('Shadow Sun');
+sun.addComponent('light', {
+  type: 'directional',
+  color: new pc.Color(1, 0.94, 0.82),
+  intensity: 1.6,
+  castShadows: true,
+  shadowResolution: 2048,
+  shadowDistance: 150,
+  normalOffsetBias: 0.05
+});
+sun.setLocalEulerAngles(45, 30, 0);
+app.root.addChild(sun);
 
 const target = new pc.Vec3(0,0,0);
 let yaw=0, pitch=0.12, distance=3.5, dragging=false, button=0, lastX=0, lastY=0;
@@ -90,7 +122,7 @@ async function loadSplat(url,label) {
     if(currentAsset) { app.assets.remove(currentAsset); currentAsset.unload(); }
     currentAsset=asset;
     currentEntity=new pc.Entity(label);
-    currentEntity.addComponent('gsplat',{asset});
+    currentEntity.addComponent('gsplat',{asset, castShadows: document.getElementById('shadow-toggle').checked});
     app.root.addChild(currentEntity);
     isFlipped=false;
     flipButton.classList.remove('active');
@@ -133,6 +165,12 @@ flipButton.addEventListener('click',()=>{
   flipButton.textContent=isFlipped?'↕ Restore original orientation':'↕ Flip vertically';
 });
 replayButton.addEventListener('click',playMaterialise);
+document.getElementById('floor-toggle').addEventListener('change',e=>{
+  floor.enabled=e.target.checked;
+});
+document.getElementById('shadow-toggle').addEventListener('change',e=>{
+  if(currentEntity?.gsplat) currentEntity.gsplat.castShadows=e.target.checked;
+});
 document.getElementById('reset-view').addEventListener('click',resetView);
 document.getElementById('panel-toggle').addEventListener('click',()=>panel.classList.toggle('hidden'));
 app.on('update',dt=>{
