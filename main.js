@@ -98,7 +98,7 @@ function animateDissolve(reveal=true) {
 }
 function resetDissolve() {
   dissolveAnimating=false; dissolveProgress=1;
-  if(currentEntity?.gsplat)currentEntity.gsplat.setParameter('uDissolveProgress',1.0);
+  gsplatMaterial.setParameter('uDissolveProgress',1.0);gsplatMaterial.update();
   setStatus('Splat restored',false);
 }
 function enterFirstPerson() {
@@ -236,7 +236,7 @@ async function loadSplat(url,label) {
     applySplatOrientation();
     resetView();
     document.getElementById('filename').textContent=label;
-    dissolveProgress=0;currentEntity.gsplat.setParameter('uDissolveProgress',0.0);animateDissolve(true);
+    dissolveProgress=0;gsplatMaterial.setParameter('uDissolveProgress',0.0);gsplatMaterial.update();animateDissolve(true);
   } catch(err) {
     console.error(err);
     app.assets.remove(asset);
@@ -295,7 +295,7 @@ app.on('update',dt=>{
   if(dissolveAnimating&&currentEntity){
     dissolveElapsed+=dt;const t=pc.math.clamp(dissolveElapsed/dissolveDuration,0,1);
     const eased=t*t*(3-2*t);dissolveProgress=dissolveFrom+(dissolveTo-dissolveFrom)*eased;
-    currentEntity.gsplat.setParameter('uDissolveProgress',dissolveProgress);
+    gsplatMaterial.setParameter('uDissolveProgress',dissolveProgress);gsplatMaterial.update();
     if(t>=1){dissolveAnimating=false;setStatus(dissolveTo>0.5?'Splat revealed':'Splat dissolved',false);}
   }
   updateFirstPerson(dt);
