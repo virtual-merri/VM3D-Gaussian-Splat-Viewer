@@ -69,7 +69,6 @@ gsplatMaterial.getShaderChunks('wgsl').set('gsplatModifyVS',dissolveWGSL);
 gsplatMaterial.setParameter('uDissolveProgress',1.0);
 gsplatMaterial.update();
 const flipButton=document.getElementById('flip-splat');
-const replayButton=document.getElementById('replay-materialise');
 const moveButton=document.getElementById('move-mode');
 const rotateButton=document.getElementById('rotate-mode');
 const transformOffButton=document.getElementById('transform-off');
@@ -122,7 +121,7 @@ function updateFirstPerson(dt) {
   const right=camera.right.clone();right.y=0;if(right.lengthSq()>0)right.normalize();
   const movement=forward.mulScalar(moveForward).add(right.mulScalar(moveRight));
   movement.y+=moveVertical;
-  if(movement.lengthSq()>0){movement.normalize().mulScalar(fpSpeed*dt);camera.translate(movement);}
+  if(movement.lengthSq()>0){movement.normalize().mulScalar(fpSpeed*dt);camera.setPosition(camera.getPosition().clone().add(movement));}
   camera.setEulerAngles(fpPitch*pc.math.RAD_TO_DEG,fpYaw*pc.math.RAD_TO_DEG,0);
 }
 
@@ -139,6 +138,7 @@ function resetView() { yaw=0; pitch=0.12; distance=3.5; if(currentEntity) target
 resetView();
 
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('click',()=>{if(firstPerson&&!pointerLocked)canvas.requestPointerLock?.();});
 document.addEventListener('pointerlockchange',()=>{
   pointerLocked=document.pointerLockElement===canvas;
   if(firstPerson&&!pointerLocked)exitFirstPerson();
@@ -226,7 +226,6 @@ async function loadSplat(url,label) {
     flipButton.classList.remove('active');
     flipButton.setAttribute('aria-pressed','false');
     flipButton.disabled=false;
-    replayButton.disabled=false;
     dissolveButton.disabled=false;dissolveReverseButton.disabled=false;dissolveResetButton.disabled=false;
     moveButton.disabled=false;
     rotateButton.disabled=false;
