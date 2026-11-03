@@ -67,6 +67,7 @@ function applySplatOrientation() {
   currentEntity.setLocalEulerAngles(isFlipped?180:0,e.y,e.z);
 }
 function setTransformMode(mode) {
+  if(mode && !currentEntity) { setStatus('Load a splat before using Move or Rotate.'); return; }
   transformMode=mode;
   moveButton.classList.toggle('active',mode==='move');
   rotateButton.classList.toggle('active',mode==='rotate');
@@ -166,6 +167,7 @@ async function loadSplat(url,label) {
     rotateButton.disabled=false;
     transformOffButton.disabled=false;
     orbitButton.disabled=false;
+    moveButton.disabled=false; rotateButton.disabled=false; transformOffButton.disabled=false;
     stopOrbit();
     setTransformMode(null);
     applySplatOrientation();
@@ -211,7 +213,8 @@ orbitButton.addEventListener('click',()=>{
   orbiting=!orbiting;
   orbitButton.classList.toggle('active',orbiting);
   orbitButton.textContent=orbiting?'Ⅱ Stop orbit':'▶ Start orbit';
-  if(orbiting) { if(currentEntity) target.copy(currentEntity.getPosition()); setTransformMode(null); updateCamera(); }
+  orbitButton.setAttribute('aria-pressed',String(orbiting));
+  if(orbiting) { if(currentEntity) target.copy(currentEntity.getPosition()); setTransformMode(null); updateCamera(); setStatus('Camera orbiting — press Stop orbit to finish'); }\n  else setStatus('Camera orbit stopped',false);
 });
 document.getElementById('floor-toggle').addEventListener('change',e=>{
   floor.enabled=e.target.checked;
@@ -232,4 +235,4 @@ app.on('update',dt=>{
 app.on('error',err=>{console.error(err);setStatus('Viewer error. Check browser console.');});
 app.start();
 window.addEventListener('resize',()=>app.resizeCanvas());
-setStatus('Viewer ready — load a splat to begin.');
+setStatus('Viewer ready — load a splat to begin.',false);\n// Orbit is a camera-only control and remains available before a splat is loaded.\norbitButton.disabled=false;\nmoveButton.disabled=false;\nrotateButton.disabled=false;\ntransformOffButton.disabled=false;
