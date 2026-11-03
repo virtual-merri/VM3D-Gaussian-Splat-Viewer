@@ -6,3 +6,7 @@
 .toggle-row input{accent-color:#78c7d0;width:15px;height:15px}
 
 .button-row{display:flex;gap:8px;margin-top:9px}.tool-button{flex:1;background:#263844}.tool-button.active,#orbit-toggle.active{border-color:#78c7d0;background:#244650;color:#b9f4f6}.tool-button:disabled,#transform-off:disabled,#orbit-toggle:disabled{opacity:.42;cursor:not-allowed}
+
+/* Reliable pointer-driven transform modes */
+#application-canvas{touch-action:none;cursor:grab}
+#application-canvas:active{cursor:grabbing}
