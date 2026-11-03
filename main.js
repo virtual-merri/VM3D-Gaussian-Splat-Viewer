@@ -1,8 +1,4 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.23.3/+esm';
-import { TranslateGizmo } from 'https://cdn.jsdelivr.net/npm/playcanvas@2.23.3/build/playcanvas/src/extras/gizmo/translate-gizmo.js/+esm';
-import { RotateGizmo } from 'https://cdn.jsdelivr.net/npm/playcanvas@2.23.3/build/playcanvas/src/extras/gizmo/rotate-gizmo.js/+esm';
-import { Gizmo } from 'https://cdn.jsdelivr.net/npm/playcanvas@2.23.3/build/playcanvas/src/extras/gizmo/gizmo.js/+esm';
-import { GSplatRevealRadial } from 'https://cdn.jsdelivr.net/npm/playcanvas@2.23.3/scripts/esm/gsplat/reveal-radial.mjs/+esm';
 
 const canvas = document.getElementById('application-canvas');
 const statusEl = document.getElementById('status');
@@ -57,7 +53,7 @@ const target = new pc.Vec3(0,0,0);
 let yaw=0, pitch=0.12, distance=3.5, dragging=false, button=0, lastX=0, lastY=0;
 let currentAsset=null, currentEntity=null, objectUrl=null;
 let isFlipped=false, orbiting=false;
-let activeGizmo=null, translateGizmo=null, rotateGizmo=null;
+let transformMode=null, transformStart=null, revealScale=1, revealAnimating=false;
 const orbitSpeed=0.22;
 const flipButton=document.getElementById('flip-splat');
 const replayButton=document.getElementById('replay-materialise');
@@ -65,48 +61,13 @@ const moveButton=document.getElementById('move-mode');
 const rotateButton=document.getElementById('rotate-mode');
 const transformOffButton=document.getElementById('transform-off');
 const orbitButton=document.getElementById('orbit-toggle');
-const gizmoLayer=Gizmo.createLayer(app);
-translateGizmo=new TranslateGizmo(camera.camera,gizmoLayer);
-rotateGizmo=new RotateGizmo(camera.camera,gizmoLayer);
-translateGizmo.enabled=false;
-rotateGizmo.enabled=false;
-translateGizmo.size=1.35;
-rotateGizmo.size=1.35;
-translateGizmo.coordSpace='world';
-rotateGizmo.coordSpace='world';
-
-function applySplatOrientation() {
-  if(!currentEntity)return;
-  currentEntity.setLocalEulerAngles(isFlipped?180:0,0,0);
-}
-function setTransformMode(mode) {
-  activeGizmo=mode==='move'?translateGizmo:mode==='rotate'?rotateGizmo:null;
-  translateGizmo.enabled=activeGizmo===translateGizmo;
-  rotateGizmo.enabled=activeGizmo===rotateGizmo;
-  moveButton.classList.toggle('active',activeGizmo===translateGizmo);
-  rotateButton.classList.toggle('active',activeGizmo===rotateGizmo);
-  transformOffButton.textContent=activeGizmo?'Hide transform widget':'Transform widget hidden';
-}
+function applySplatOrientation() {\n  if(!currentEntity)return;\n  const e=currentEntity.getLocalEulerAngles();\n  currentEntity.setLocalEulerAngles(isFlipped?180:0,e.y,e.z);\n}\nfunction setTransformMode(mode) {\n  transformMode=mode;\n  moveButton.classList.toggle('active',mode==='move');\n  rotateButton.classList.toggle('active',mode==='rotate');\n  transformOffButton.textContent=mode?'Exit '+mode+' mode':'Transform mode off';\n  canvas.style.cursor=mode?'crosshair':'grab';\n  setStatus(mode==='move'?'MOVE MODE — drag to move the splat in the camera plane':mode==='rotate'?'ROTATE MODE — drag to rotate the splat':'Viewer ready',!!mode);\n}
 function stopOrbit() {
   orbiting=false;
   orbitButton.classList.remove('active');
   orbitButton.textContent='▶ Start orbit';
 }
-function playMaterialise() {
-  if(!currentEntity)return;
-  if(currentEntity.script) currentEntity.script.destroy();
-  currentEntity.addComponent('script');
-  const reveal=currentEntity.script.create(GSplatRevealRadial);
-  if(reveal) {
-    reveal.center.set(0,0,0);
-    reveal.speed=3.2;
-    reveal.acceleration=0;
-    reveal.delay=0;
-    reveal.oscillationIntensity=0.12;
-    reveal.endRadius=18;
-    setStatus('Materialising from the centre…');
-  } else setStatus('Splat loaded');
-}
+function playMaterialise() {\n  if(!currentEntity)return;\n  revealScale=0.001; revealAnimating=true;\n  currentEntity.setLocalScale(revealScale,revealScale,revealScale);\n  setStatus('Materialising splat…');\n}
 
 function updateCamera() {
   const cp=Math.cos(pitch);
@@ -121,17 +82,12 @@ function resetView() { yaw=0; pitch=0.12; distance=3.5; if(currentEntity) target
 resetView();
 
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
-canvas.addEventListener('pointerdown',e=>{
-  if(activeGizmo)return;
-  dragging=true; button=e.button; lastX=e.clientX; lastY=e.clientY;
-  canvas.setPointerCapture(e.pointerId);
-});
+canvas.addEventListener('pointerdown',e=>{\n  if(e.button!==0 && !transformMode)return;\n  dragging=true; button=e.button; lastX=e.clientX; lastY=e.clientY;\n  if(transformMode && currentEntity) transformStart={position:currentEntity.getPosition().clone(),euler:currentEntity.getLocalEulerAngles().clone()};\n  canvas.setPointerCapture(e.pointerId);\n});
 canvas.addEventListener('pointerup',()=>dragging=false);
 canvas.addEventListener('pointercancel',()=>dragging=false);
 canvas.addEventListener('pointermove',e=>{
   if(!dragging)return;
-  const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
-  if(button===2 || e.shiftKey) {
+  const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;\n  if(transformMode && currentEntity) {\n    if(transformMode==='move') {\n      const scale=distance*0.0018;\n      const p=currentEntity.getPosition();\n      p.add(camera.right.clone().mulScalar(dx*scale));\n      p.add(camera.up.clone().mulScalar(-dy*scale));\n      currentEntity.setPosition(p);\n      target.copy(p); updateCamera();\n    } else if(transformMode==='rotate') {\n      const euler=currentEntity.getLocalEulerAngles();\n      currentEntity.setLocalEulerAngles(euler.x+dy*0.45,euler.y+dx*0.45,euler.z);\n    }\n    return;\n  }\n  if(button===2 || e.shiftKey) {
     const scale=distance*0.0018;
     target.add(camera.right.clone().mulScalar(-dx*scale));
     target.add(camera.up.clone().mulScalar(dy*scale));
@@ -159,7 +115,7 @@ async function loadSplat(url,label) {
       asset.once('error',err=>reject(err||new Error('Splat load failed')));
       app.assets.load(asset);
     });
-    if(currentEntity) { translateGizmo.detach(); rotateGizmo.detach(); currentEntity.destroy(); }
+    if(currentEntity) currentEntity.destroy();
     if(currentAsset) { app.assets.remove(currentAsset); currentAsset.unload(); }
     currentAsset=asset;
     currentEntity=new pc.Entity(label);
@@ -176,8 +132,6 @@ async function loadSplat(url,label) {
     orbitButton.disabled=false;
     stopOrbit();
     setTransformMode(null);
-    translateGizmo.attach([currentEntity]);
-    rotateGizmo.attach([currentEntity]);
     applySplatOrientation();
     resetView();
     document.getElementById('filename').textContent=label;
@@ -214,8 +168,7 @@ flipButton.addEventListener('click',()=>{
   flipButton.textContent=isFlipped?'↕ Restore original orientation':'↕ Flip vertically';
 });
 replayButton.addEventListener('click',playMaterialise);
-moveButton.addEventListener('click',()=>setTransformMode(activeGizmo===translateGizmo?null:'move'));
-rotateButton.addEventListener('click',()=>setTransformMode(activeGizmo===rotateGizmo?null:'rotate'));
+moveButton.addEventListener('click',()=>setTransformMode(transformMode==='move'?null:'move'));\nrotateButton.addEventListener('click',()=>setTransformMode(transformMode==='rotate'?null:'rotate'));
 transformOffButton.addEventListener('click',()=>setTransformMode(null));
 orbitButton.addEventListener('click',()=>{
   orbiting=!orbiting;
@@ -232,7 +185,7 @@ document.getElementById('shadow-toggle').addEventListener('change',e=>{
 document.getElementById('reset-view').addEventListener('click',resetView);
 document.getElementById('panel-toggle').addEventListener('click',()=>panel.classList.toggle('hidden'));
 app.on('update',dt=>{
-  if(orbiting && !dragging) { if(currentEntity) target.copy(currentEntity.getPosition()); yaw += orbitSpeed * dt; updateCamera(); }
+  if(revealAnimating && currentEntity) {\n    revealScale=Math.min(1,revealScale+dt*1.8);\n    currentEntity.setLocalScale(revealScale,revealScale,revealScale);\n    if(revealScale>=1) { revealAnimating=false; setStatus('Splat loaded',false); }\n  }\n  if(orbiting && !dragging) { if(currentEntity) target.copy(currentEntity.getPosition()); yaw += orbitSpeed * dt; updateCamera(); }
 });
 app.on('error',err=>{console.error(err);setStatus('Viewer error. Check browser console.');});
 app.start();
