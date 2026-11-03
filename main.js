@@ -134,7 +134,7 @@ function updateCamera() {
   );
   camera.lookAt(target);
 }
-function resetView() { yaw=0; pitch=0.12; distance=3.5; if(currentEntity) target.copy(currentEntity.getPosition()); else target.set(0,0,0); updateCamera(); }
+function resetView() { if(firstPerson)exitFirstPerson(); yaw=0; pitch=0.12; distance=3.5; if(currentEntity) target.copy(currentEntity.getPosition()); else target.set(0,0,0); updateCamera(); }
 resetView();
 
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
