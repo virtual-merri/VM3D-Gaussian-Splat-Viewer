@@ -20,6 +20,21 @@ app.root.addChild(camera);
 const target = new pc.Vec3(0,0,0);
 let yaw=0, pitch=0.12, distance=3.5, dragging=false, button=0, lastX=0, lastY=0;
 let currentAsset=null, currentEntity=null, objectUrl=null;
+let isFlipped=false, materialiseElapsed=-1;
+const materialiseDuration=1.65;
+const flipButton=document.getElementById('flip-splat');
+const replayButton=document.getElementById('replay-materialise');
+
+function applySplatOrientation() {
+  if(!currentEntity)return;
+  currentEntity.setLocalEulerAngles(isFlipped?180:0,0,0);
+}
+function playMaterialise() {
+  if(!currentEntity)return;
+  materialiseElapsed=0;
+  currentEntity.setLocalScale(0.001,0.001,0.001);
+  setStatus('Materialising splat…');
+}
 
 function updateCamera() {
   const cp=Math.cos(pitch);
@@ -77,10 +92,15 @@ async function loadSplat(url,label) {
     currentEntity=new pc.Entity(label);
     currentEntity.addComponent('gsplat',{asset});
     app.root.addChild(currentEntity);
+    isFlipped=false;
+    flipButton.classList.remove('active');
+    flipButton.setAttribute('aria-pressed','false');
+    flipButton.disabled=false;
+    replayButton.disabled=false;
+    applySplatOrientation();
     resetView();
     document.getElementById('filename').textContent=label;
-    setStatus('Splat loaded');
-    setTimeout(()=>setStatus('',false),1400);
+    playMaterialise();
   } catch(err) {
     console.error(err);
     app.assets.remove(asset);
@@ -104,8 +124,33 @@ document.getElementById('url-input').addEventListener('keydown',e=>{
 document.getElementById('load-demo').addEventListener('click',()=>{
   loadSplat('https://developer.playcanvas.com/assets/toy-cat.sog','PlayCanvas sample');
 });
+flipButton.addEventListener('click',()=>{
+  if(!currentEntity)return;
+  isFlipped=!isFlipped;
+  applySplatOrientation();
+  flipButton.classList.toggle('active',isFlipped);
+  flipButton.setAttribute('aria-pressed',String(isFlipped));
+  flipButton.textContent=isFlipped?'↕ Restore original orientation':'↕ Flip vertically';
+});
+replayButton.addEventListener('click',playMaterialise);
 document.getElementById('reset-view').addEventListener('click',resetView);
 document.getElementById('panel-toggle').addEventListener('click',()=>panel.classList.toggle('hidden'));
+app.on('update',dt=>{
+  if(materialiseElapsed<0 || !currentEntity)return;
+  materialiseElapsed+=dt;
+  const t=Math.min(materialiseElapsed/materialiseDuration,1);
+  // Ease-out-back gives the splat a soft, physical "assembling into place" finish.
+  const overshoot=1.35, x=t-1;
+  const eased=1+(overshoot+1)*x*x*x+overshoot*x*x;
+  const scale=0.001+(Math.max(0,eased)*0.999);
+  currentEntity.setLocalScale(scale,scale,scale);
+  if(t>=1){
+    currentEntity.setLocalScale(1,1,1);
+    materialiseElapsed=-1;
+    setStatus('Splat loaded');
+    setTimeout(()=>setStatus('',false),900);
+  }
+});
 app.on('error',err=>{console.error(err);setStatus('Viewer error. Check browser console.');});
 app.start();
 window.addEventListener('resize',()=>app.resizeCanvas());
