@@ -53,7 +53,7 @@ const target = new pc.Vec3(0,0,0);
 let yaw=0, pitch=0.12, distance=3.5, dragging=false, button=0, lastX=0, lastY=0;
 let currentAsset=null, currentEntity=null, objectUrl=null;
 let isFlipped=false, orbiting=false;
-let transformMode=null, transformStart=null, revealScale=1, revealAnimating=false;
+let transformMode=null, revealScale=1, revealAnimating=false;
 const orbitSpeed=0.22;
 const flipButton=document.getElementById('flip-splat');
 const replayButton=document.getElementById('replay-materialise');
@@ -102,7 +102,6 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('pointerdown',e=>{
   if(e.button!==0 && !transformMode)return;
   dragging=true; button=e.button; lastX=e.clientX; lastY=e.clientY;
-  if(transformMode && currentEntity) transformStart={position:currentEntity.getPosition().clone(),euler:currentEntity.getLocalEulerAngles().clone()};
   canvas.setPointerCapture(e.pointerId);
 });
 canvas.addEventListener('pointerup',()=>dragging=false);
@@ -113,7 +112,7 @@ canvas.addEventListener('pointermove',e=>{
   if(transformMode && currentEntity) {
     if(transformMode==='move') {
       const scale=distance*0.0018;
-      const p=currentEntity.getPosition();
+      const p=currentEntity.getPosition().clone();
       p.add(camera.right.clone().mulScalar(dx*scale));
       p.add(camera.up.clone().mulScalar(-dy*scale));
       currentEntity.setPosition(p);
