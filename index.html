@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VM3D Gaussian Splat Viewer</title><link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<main id="viewer">
+<canvas id="application-canvas"></canvas>
+<header class="topbar">
+  <div class="brand"><span class="mark">3D</span><span><b>VM3D</b><small>GAUSSIAN SPLAT VIEWER</small></span></div>
+  <div><button id="reset-view">Reset view</button> <button id="panel-toggle" aria-label="Toggle controls">☰</button></div>
+</header>
+<aside id="panel" class="panel">
+  <div class="eyebrow">EXPERIMENTAL VIEWER</div><h1>Load a 3D Gaussian Splat</h1>
+  <label class="drop" for="file-input"><b>↑ Choose a local file</b><span>PLY or SOG format</span><input id="file-input" type="file" accept=".ply,.sog"></label>
+  <div class="separator">OR LOAD FROM URL</div>
+  <label class="field-label" for="url-input">Direct splat file URL</label>
+  <input id="url-input" type="url" placeholder="https://…/scan.sog">
+  <button id="load-url" class="primary">Load URL</button>
+  <button id="load-demo" class="secondary">Load PlayCanvas sample</button>
+  <hr><div class="eyebrow">NAVIGATION</div>
+  <p><kbd>LEFT DRAG</kbd> Orbit</p><p><kbd>RIGHT DRAG</kbd> Pan</p><p><kbd>SHIFT + DRAG</kbd> Pan</p><p><kbd>SCROLL</kbd> Zoom</p><p><kbd>DOUBLE CLICK</kbd> Reset view</p>
+  <small class="note">Early test build. Remote files must allow browser CORS access. Large scans may take time to load.</small>
+</aside>
+<div id="status" role="status">Starting PlayCanvas…</div>
+<footer><span id="filename">No splat loaded</span><span>PLAYCANVAS ENGINE</span></footer>
+</main>
+<script type="module" src="./main.js"></script>
+</body></html>
