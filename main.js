@@ -117,7 +117,7 @@ function updateCamera() {
   );
   camera.lookAt(target);
 }
-function resetView() { yaw=0; pitch=0.12; distance=3.5; target.set(0,0,0); updateCamera(); }
+function resetView() { yaw=0; pitch=0.12; distance=3.5; if(currentEntity) target.copy(currentEntity.getPosition()); else target.set(0,0,0); updateCamera(); }
 resetView();
 
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
@@ -221,7 +221,7 @@ orbitButton.addEventListener('click',()=>{
   orbiting=!orbiting;
   orbitButton.classList.toggle('active',orbiting);
   orbitButton.textContent=orbiting?'Ⅱ Stop orbit':'▶ Start orbit';
-  if(orbiting) setTransformMode(null);
+  if(orbiting) { if(currentEntity) target.copy(currentEntity.getPosition()); setTransformMode(null); updateCamera(); }
 });
 document.getElementById('floor-toggle').addEventListener('change',e=>{
   floor.enabled=e.target.checked;
@@ -232,7 +232,7 @@ document.getElementById('shadow-toggle').addEventListener('change',e=>{
 document.getElementById('reset-view').addEventListener('click',resetView);
 document.getElementById('panel-toggle').addEventListener('click',()=>panel.classList.toggle('hidden'));
 app.on('update',dt=>{
-  if(orbiting && !dragging) { yaw += orbitSpeed * dt; updateCamera(); }
+  if(orbiting && !dragging) { if(currentEntity) target.copy(currentEntity.getPosition()); yaw += orbitSpeed * dt; updateCamera(); }
 });
 app.on('error',err=>{console.error(err);setStatus('Viewer error. Check browser console.');});
 app.start();
