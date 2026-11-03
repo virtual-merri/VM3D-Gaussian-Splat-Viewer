@@ -61,13 +61,30 @@ const moveButton=document.getElementById('move-mode');
 const rotateButton=document.getElementById('rotate-mode');
 const transformOffButton=document.getElementById('transform-off');
 const orbitButton=document.getElementById('orbit-toggle');
-function applySplatOrientation() {\n  if(!currentEntity)return;\n  const e=currentEntity.getLocalEulerAngles();\n  currentEntity.setLocalEulerAngles(isFlipped?180:0,e.y,e.z);\n}\nfunction setTransformMode(mode) {\n  transformMode=mode;\n  moveButton.classList.toggle('active',mode==='move');\n  rotateButton.classList.toggle('active',mode==='rotate');\n  transformOffButton.textContent=mode?'Exit '+mode+' mode':'Transform mode off';\n  canvas.style.cursor=mode?'crosshair':'grab';\n  setStatus(mode==='move'?'MOVE MODE — drag to move the splat in the camera plane':mode==='rotate'?'ROTATE MODE — drag to rotate the splat':'Viewer ready',!!mode);\n}
+function applySplatOrientation() {
+  if(!currentEntity)return;
+  const e=currentEntity.getLocalEulerAngles();
+  currentEntity.setLocalEulerAngles(isFlipped?180:0,e.y,e.z);
+}
+function setTransformMode(mode) {
+  transformMode=mode;
+  moveButton.classList.toggle('active',mode==='move');
+  rotateButton.classList.toggle('active',mode==='rotate');
+  transformOffButton.textContent=mode?'Exit '+mode+' mode':'Transform mode off';
+  canvas.style.cursor=mode?'crosshair':'grab';
+  setStatus(mode==='move'?'MOVE MODE — drag to move the splat in the camera plane':mode==='rotate'?'ROTATE MODE — drag to rotate the splat':'Viewer ready',!!mode);
+}
 function stopOrbit() {
   orbiting=false;
   orbitButton.classList.remove('active');
   orbitButton.textContent='▶ Start orbit';
 }
-function playMaterialise() {\n  if(!currentEntity)return;\n  revealScale=0.001; revealAnimating=true;\n  currentEntity.setLocalScale(revealScale,revealScale,revealScale);\n  setStatus('Materialising splat…');\n}
+function playMaterialise() {
+  if(!currentEntity)return;
+  revealScale=0.001; revealAnimating=true;
+  currentEntity.setLocalScale(revealScale,revealScale,revealScale);
+  setStatus('Materialising splat…');
+}
 
 function updateCamera() {
   const cp=Math.cos(pitch);
@@ -82,12 +99,32 @@ function resetView() { yaw=0; pitch=0.12; distance=3.5; if(currentEntity) target
 resetView();
 
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
-canvas.addEventListener('pointerdown',e=>{\n  if(e.button!==0 && !transformMode)return;\n  dragging=true; button=e.button; lastX=e.clientX; lastY=e.clientY;\n  if(transformMode && currentEntity) transformStart={position:currentEntity.getPosition().clone(),euler:currentEntity.getLocalEulerAngles().clone()};\n  canvas.setPointerCapture(e.pointerId);\n});
+canvas.addEventListener('pointerdown',e=>{
+  if(e.button!==0 && !transformMode)return;
+  dragging=true; button=e.button; lastX=e.clientX; lastY=e.clientY;
+  if(transformMode && currentEntity) transformStart={position:currentEntity.getPosition().clone(),euler:currentEntity.getLocalEulerAngles().clone()};
+  canvas.setPointerCapture(e.pointerId);
+});
 canvas.addEventListener('pointerup',()=>dragging=false);
 canvas.addEventListener('pointercancel',()=>dragging=false);
 canvas.addEventListener('pointermove',e=>{
   if(!dragging)return;
-  const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;\n  if(transformMode && currentEntity) {\n    if(transformMode==='move') {\n      const scale=distance*0.0018;\n      const p=currentEntity.getPosition();\n      p.add(camera.right.clone().mulScalar(dx*scale));\n      p.add(camera.up.clone().mulScalar(-dy*scale));\n      currentEntity.setPosition(p);\n      target.copy(p); updateCamera();\n    } else if(transformMode==='rotate') {\n      const euler=currentEntity.getLocalEulerAngles();\n      currentEntity.setLocalEulerAngles(euler.x+dy*0.45,euler.y+dx*0.45,euler.z);\n    }\n    return;\n  }\n  if(button===2 || e.shiftKey) {
+  const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
+  if(transformMode && currentEntity) {
+    if(transformMode==='move') {
+      const scale=distance*0.0018;
+      const p=currentEntity.getPosition();
+      p.add(camera.right.clone().mulScalar(dx*scale));
+      p.add(camera.up.clone().mulScalar(-dy*scale));
+      currentEntity.setPosition(p);
+      target.copy(p); updateCamera();
+    } else if(transformMode==='rotate') {
+      const euler=currentEntity.getLocalEulerAngles();
+      currentEntity.setLocalEulerAngles(euler.x+dy*0.45,euler.y+dx*0.45,euler.z);
+    }
+    return;
+  }
+  if(button===2 || e.shiftKey) {
     const scale=distance*0.0018;
     target.add(camera.right.clone().mulScalar(-dx*scale));
     target.add(camera.up.clone().mulScalar(dy*scale));
@@ -168,7 +205,8 @@ flipButton.addEventListener('click',()=>{
   flipButton.textContent=isFlipped?'↕ Restore original orientation':'↕ Flip vertically';
 });
 replayButton.addEventListener('click',playMaterialise);
-moveButton.addEventListener('click',()=>setTransformMode(transformMode==='move'?null:'move'));\nrotateButton.addEventListener('click',()=>setTransformMode(transformMode==='rotate'?null:'rotate'));
+moveButton.addEventListener('click',()=>setTransformMode(transformMode==='move'?null:'move'));
+rotateButton.addEventListener('click',()=>setTransformMode(transformMode==='rotate'?null:'rotate'));
 transformOffButton.addEventListener('click',()=>setTransformMode(null));
 orbitButton.addEventListener('click',()=>{
   orbiting=!orbiting;
@@ -185,7 +223,12 @@ document.getElementById('shadow-toggle').addEventListener('change',e=>{
 document.getElementById('reset-view').addEventListener('click',resetView);
 document.getElementById('panel-toggle').addEventListener('click',()=>panel.classList.toggle('hidden'));
 app.on('update',dt=>{
-  if(revealAnimating && currentEntity) {\n    revealScale=Math.min(1,revealScale+dt*1.8);\n    currentEntity.setLocalScale(revealScale,revealScale,revealScale);\n    if(revealScale>=1) { revealAnimating=false; setStatus('Splat loaded',false); }\n  }\n  if(orbiting && !dragging) { if(currentEntity) target.copy(currentEntity.getPosition()); yaw += orbitSpeed * dt; updateCamera(); }
+  if(revealAnimating && currentEntity) {
+    revealScale=Math.min(1,revealScale+dt*1.8);
+    currentEntity.setLocalScale(revealScale,revealScale,revealScale);
+    if(revealScale>=1) { revealAnimating=false; setStatus('Splat loaded',false); }
+  }
+  if(orbiting && !dragging) { if(currentEntity) target.copy(currentEntity.getPosition()); yaw += orbitSpeed * dt; updateCamera(); }
 });
 app.on('error',err=>{console.error(err);setStatus('Viewer error. Check browser console.');});
 app.start();
