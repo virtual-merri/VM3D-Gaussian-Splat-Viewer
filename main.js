@@ -1,7 +1,7 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.23.3/+esm';
-import { TranslateGizmo } from 'https://cdn.jsdelivr.net/npm/playcanvas@2.23.3/scripts/esm/gizmo/translate-gizmo.mjs/+esm';
-import { RotateGizmo } from 'https://cdn.jsdelivr.net/npm/playcanvas@2.23.3/scripts/esm/gizmo/rotate-gizmo.mjs/+esm';
-import { Gizmo } from 'https://cdn.jsdelivr.net/npm/playcanvas@2.23.3/scripts/esm/gizmo/gizmo.mjs/+esm';
+import { TranslateGizmo } from 'https://cdn.jsdelivr.net/npm/playcanvas@2.23.3/build/playcanvas/src/extras/gizmo/translate-gizmo.js/+esm';
+import { RotateGizmo } from 'https://cdn.jsdelivr.net/npm/playcanvas@2.23.3/build/playcanvas/src/extras/gizmo/rotate-gizmo.js/+esm';
+import { Gizmo } from 'https://cdn.jsdelivr.net/npm/playcanvas@2.23.3/build/playcanvas/src/extras/gizmo/gizmo.js/+esm';
 import { GSplatRevealRadial } from 'https://cdn.jsdelivr.net/npm/playcanvas@2.23.3/scripts/esm/gsplat/reveal-radial.mjs/+esm';
 
 const canvas = document.getElementById('application-canvas');
