@@ -9,7 +9,7 @@
 <main id="viewer">
 <canvas id="application-canvas"></canvas>
 <header class="topbar">
-  <div class="brand"><span class="mark">3D</span><span><b>VM3D</b><small>GAUSSIAN SPLAT VIEWER</small></span><span class="build-version" title="Viewer build">BUILD 005</span></div>
+  <div class="brand"><span class="mark">3D</span><span><b>VM3D</b><small>GAUSSIAN SPLAT VIEWER</small></span><span class="build-version" title="Viewer build">BUILD 006</span></div>
   <div><button id="reset-view">Reset view</button> <button id="panel-toggle" aria-label="Toggle controls">☰</button></div>
 </header>
 <aside id="panel" class="panel">
@@ -22,7 +22,7 @@
   <button id="load-demo" class="secondary">Load PlayCanvas sample</button>
   <hr><div class="eyebrow">SPLAT ADJUSTMENTS</div>
   <button id="flip-splat" class="secondary" aria-pressed="false" disabled>↕ Flip vertically</button>
-  <button id="replay-materialise" class="secondary" disabled>✦ Replay centre-out materialise</button>
+  <button id="replay-materialise" class="secondary" disabled>✦ Replay scale-in materialise</button>
   <hr><div class="eyebrow">TRANSFORM SPLAT</div>
   <div class="button-row"><button id="move-mode" class="tool-button" disabled>↔ Move</button><button id="rotate-mode" class="tool-button" disabled>⟳ Rotate</button></div>
   <button id="transform-off" class="secondary" disabled>Hide transform widget</button>
@@ -31,7 +31,7 @@
   <hr><div class="eyebrow">GROUND & LIGHTING</div>
   <label class="toggle-row"><input id="floor-toggle" type="checkbox" checked> Show ground floor</label>
   <label class="toggle-row"><input id="shadow-toggle" type="checkbox" checked> Splat casts shadows</label>
-  <small class="note">Flip rotates the splat 180° around its local horizontal axis. The centre-out materialise effect reveals the splat progressively from its centre. Use Move and Rotate to position it.</small>
+  <small class="note">Flip rotates the splat 180° around its local horizontal axis. The centre-out materialise effect reveals the splat progressively from its centre. Select Move or Rotate, then drag directly on the splat to transform it.</small>
   <hr><div class="eyebrow">NAVIGATION</div>
   <p><kbd>LEFT DRAG</kbd> Orbit</p><p><kbd>RIGHT DRAG</kbd> Pan</p><p><kbd>SHIFT + DRAG</kbd> Pan</p><p><kbd>SCROLL</kbd> Zoom</p><p><kbd>DOUBLE CLICK</kbd> Reset view</p>
   <small class="note">Early test build. Remote files must allow browser CORS access. Large scans may take time to load.</small>
