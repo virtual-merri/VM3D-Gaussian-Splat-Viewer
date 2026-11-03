@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>VM3D Gaussian Splat Viewer</title><link rel="stylesheet" href="./style.css">
+<style>.build-version{font:600 9px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.08em;color:#8fa4ae;opacity:.8;margin-left:9px;padding:3px 5px;border:1px solid rgba(143,164,174,.22);border-radius:4px;vertical-align:middle}</style>
 </head>
 <body>
 <main id="viewer">
 <canvas id="application-canvas"></canvas>
 <header class="topbar">
-  <div class="brand"><span class="mark">3D</span><span><b>VM3D</b><small>GAUSSIAN SPLAT VIEWER</small></span></div>
+  <div class="brand"><span class="mark">3D</span><span><b>VM3D</b><small>GAUSSIAN SPLAT VIEWER</small></span><span class="build-version" title="Viewer build">BUILD 005</span></div>
   <div><button id="reset-view">Reset view</button> <button id="panel-toggle" aria-label="Toggle controls">☰</button></div>
 </header>
 <aside id="panel" class="panel">
