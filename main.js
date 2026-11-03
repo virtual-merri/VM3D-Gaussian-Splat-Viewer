@@ -61,12 +61,11 @@ const dissolveButton=document.getElementById('dissolve-reveal');
 const dissolveReverseButton=document.getElementById('dissolve-out');
 const dissolveResetButton=document.getElementById('dissolve-reset');
 const firstPersonButton=document.getElementById('first-person-toggle');
-const dissolveGLSL="uniform float uDissolveProgress;\nfloat vmHash31(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}\nfloat vmNoise3(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);\nfloat a=mix(vmHash31(i),vmHash31(i+vec3(1,0,0)),f.x);\nfloat b=mix(vmHash31(i+vec3(0,1,0)),vmHash31(i+vec3(1,1,0)),f.x);\nfloat c=mix(vmHash31(i+vec3(0,0,1)),vmHash31(i+vec3(1,0,1)),f.x);\nfloat d=mix(vmHash31(i+vec3(0,1,1)),vmHash31(i+vec3(1,1,1)),f.x);\nreturn mix(mix(a,b,f.y),mix(c,d,f.y),f.z);}\nvoid modifySplatColor(vec3 center,inout vec4 color){\nfloat n=vmNoise3(center*0.72)*0.57+vmNoise3(center*1.51+vec3(17.0))*0.29+vmNoise3(center*3.13+vec3(41.0))*0.14;\nfloat edge=1.0-smoothstep(0.0,0.065,abs(n-uDissolveProgress));\nfloat visible=smoothstep(n-0.018,n+0.018,uDissolveProgress);\ncolor.rgb=mix(color.rgb,vec3(0.28,0.88,1.0)*1.65,edge*0.92);color.a*=max(visible,edge*0.82);}";
-const dissolveWGSL="uniform uDissolveProgress: f32;\nfn vmHash31(p:vec3f)->f32{return fract(sin(dot(p,vec3f(127.1,311.7,74.7)))*43758.5453);}\nfn vmNoise3(p:vec3f)->f32{let i=floor(p);var f=fract(p);f=f*f*(vec3f(3.0)-2.0*f);\nlet a=mix(vmHash31(i),vmHash31(i+vec3f(1.0,0.0,0.0)),f.x);\nlet b=mix(vmHash31(i+vec3f(0.0,1.0,0.0)),vmHash31(i+vec3f(1.0,1.0,0.0)),f.x);\nlet c=mix(vmHash31(i+vec3f(0.0,0.0,1.0)),vmHash31(i+vec3f(1.0,0.0,1.0)),f.x);\nlet d=mix(vmHash31(i+vec3f(0.0,1.0,1.0)),vmHash31(i+vec3f(1.0,1.0,1.0)),f.x);return mix(mix(a,b,f.y),mix(c,d,f.y),f.z);}\nfn modifySplatColor(center:vec3f,color:ptr<function,vec4f>){\nlet n=vmNoise3(center*0.72)*0.57+vmNoise3(center*1.51+vec3f(17.0))*0.29+vmNoise3(center*3.13+vec3f(41.0))*0.14;\nlet edge=1.0-smoothstep(0.0,0.065,abs(n-uniform.uDissolveProgress));\nlet visible=smoothstep(n-0.018,n+0.018,uniform.uDissolveProgress);\n(*color)=vec4f(mix((*color).rgb,vec3f(0.28,0.88,1.0)*1.65,edge*0.92),(*color).a*max(visible,edge*0.82));}";
+const dissolveGLSL="uniform float uDissolveProgress;\nfloat vmHash31(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }\nfloat vmNoise3(vec3 p) {\n    vec3 i = floor(p), f = fract(p);\n    f = f * f * (3.0 - 2.0 * f);\n    float a = mix(vmHash31(i), vmHash31(i + vec3(1.0,0.0,0.0)), f.x);\n    float b = mix(vmHash31(i + vec3(0.0,1.0,0.0)), vmHash31(i + vec3(1.0,1.0,0.0)), f.x);\n    float c = mix(vmHash31(i + vec3(0.0,0.0,1.0)), vmHash31(i + vec3(1.0,0.0,1.0)), f.x);\n    float d = mix(vmHash31(i + vec3(0.0,1.0,1.0)), vmHash31(i + vec3(1.0,1.0,1.0)), f.x);\n    return mix(mix(a,b,f.y), mix(c,d,f.y), f.z);\n}\nfloat vmRevealValue(vec3 center) {\n    return vmNoise3(center * 0.72) * 0.57\n         + vmNoise3(center * 1.51 + vec3(17.0)) * 0.29\n         + vmNoise3(center * 3.13 + vec3(41.0)) * 0.14;\n}\nvoid modifySplatCenter(inout vec3 center) {}\nvoid modifySplatRotationScale(vec3 originalCenter, vec3 modifiedCenter, inout vec4 rotation, inout vec3 scale) {\n    float n = vmRevealValue(originalCenter);\n    if (n > uDissolveProgress) scale = vec3(0.0);\n}\nvoid modifySplatColor(vec3 center, inout vec4 color) {\n    float n = vmRevealValue(center);\n    float edge = 1.0 - smoothstep(0.0, 0.075, abs(n - uDissolveProgress));\n    color.rgb = mix(color.rgb, vec3(0.25, 0.88, 1.0) * 1.8, edge * 0.95);\n}";
+const dissolveWGSL="uniform uDissolveProgress: f32;\nfn vmHash31(p: vec3f) -> f32 {\n    return fract(sin(dot(p, vec3f(127.1, 311.7, 74.7))) * 43758.5453);\n}\nfn vmNoise3(p: vec3f) -> f32 {\n    let i = floor(p);\n    var f = fract(p);\n    f = f * f * (vec3f(3.0) - 2.0 * f);\n    let a = mix(vmHash31(i), vmHash31(i + vec3f(1.0,0.0,0.0)), f.x);\n    let b = mix(vmHash31(i + vec3f(0.0,1.0,0.0)), vmHash31(i + vec3f(1.0,1.0,0.0)), f.x);\n    let c = mix(vmHash31(i + vec3f(0.0,0.0,1.0)), vmHash31(i + vec3f(1.0,0.0,1.0)), f.x);\n    let d = mix(vmHash31(i + vec3f(0.0,1.0,1.0)), vmHash31(i + vec3f(1.0,1.0,1.0)), f.x);\n    return mix(mix(a,b,f.y), mix(c,d,f.y), f.z);\n}\nfn vmRevealValue(center: vec3f) -> f32 {\n    return vmNoise3(center * 0.72) * 0.57\n         + vmNoise3(center * 1.51 + vec3f(17.0)) * 0.29\n         + vmNoise3(center * 3.13 + vec3f(41.0)) * 0.14;\n}\nfn modifySplatCenter(center: ptr<function, vec3f>) {}\nfn modifySplatRotationScale(originalCenter: vec3f, modifiedCenter: vec3f, rotation: ptr<function, vec4f>, scale: ptr<function, vec3f>) {\n    let n = vmRevealValue(originalCenter);\n    if (n > uniform.uDissolveProgress) { *scale = vec3f(0.0); }\n}\nfn modifySplatColor(center: vec3f, color: ptr<function, vec4f>) {\n    let n = vmRevealValue(center);\n    let edge = 1.0 - smoothstep(0.0, 0.075, abs(n - uniform.uDissolveProgress));\n    (*color) = vec4f(mix((*color).rgb, vec3f(0.25, 0.88, 1.0) * 1.8, edge * 0.95), (*color).a);\n}";
 const gsplatMaterial=app.scene.gsplat.material;
 gsplatMaterial.getShaderChunks('glsl').set('gsplatModifyVS',dissolveGLSL);
 gsplatMaterial.getShaderChunks('wgsl').set('gsplatModifyVS',dissolveWGSL);
-gsplatMaterial.setParameter('uDissolveProgress',1.0);
 gsplatMaterial.update();
 const flipButton=document.getElementById('flip-splat');
 const moveButton=document.getElementById('move-mode');
@@ -99,7 +98,7 @@ function animateDissolve(reveal=true) {
 }
 function resetDissolve() {
   dissolveAnimating=false; dissolveProgress=1;
-  gsplatMaterial.setParameter('uDissolveProgress',1.0);
+  if(currentEntity?.gsplat)currentEntity.gsplat.setParameter('uDissolveProgress',1.0);
   setStatus('Splat restored',false);
 }
 function enterFirstPerson() {
@@ -237,7 +236,7 @@ async function loadSplat(url,label) {
     applySplatOrientation();
     resetView();
     document.getElementById('filename').textContent=label;
-    dissolveProgress=0;gsplatMaterial.setParameter('uDissolveProgress',0.0);animateDissolve(true);
+    dissolveProgress=0;currentEntity.gsplat.setParameter('uDissolveProgress',0.0);animateDissolve(true);
   } catch(err) {
     console.error(err);
     app.assets.remove(asset);
@@ -296,7 +295,7 @@ app.on('update',dt=>{
   if(dissolveAnimating&&currentEntity){
     dissolveElapsed+=dt;const t=pc.math.clamp(dissolveElapsed/dissolveDuration,0,1);
     const eased=t*t*(3-2*t);dissolveProgress=dissolveFrom+(dissolveTo-dissolveFrom)*eased;
-    gsplatMaterial.setParameter('uDissolveProgress',dissolveProgress);
+    currentEntity.gsplat.setParameter('uDissolveProgress',dissolveProgress);
     if(t>=1){dissolveAnimating=false;setStatus(dissolveTo>0.5?'Splat revealed':'Splat dissolved',false);}
   }
   updateFirstPerson(dt);
