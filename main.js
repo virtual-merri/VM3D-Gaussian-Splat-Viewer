@@ -207,7 +207,7 @@ async function loadSplat(url,label) {
   if(!url)return;
   exitFirstPerson();
   setStatus('Loading '+label+'…');
-  const asset=new pc.Asset(label,'gsplat',{url});
+  const asset=new pc.Asset(label,'gsplat',{url,filename:label});
   app.assets.add(asset);
   try {
     await new Promise((resolve,reject)=>{
@@ -240,7 +240,9 @@ async function loadSplat(url,label) {
   } catch(err) {
     console.error(err);
     app.assets.remove(asset);
-    setStatus('Could not load file. Check format, URL and CORS permissions.');
+    const detail=err?.message||String(err||'Unknown loader error');
+    setStatus('Could not load '+label+': '+detail);
+    console.error('Gaussian splat load failed:',{label,url,error:err});
   }
 }
 document.getElementById('file-input').addEventListener('change',e=>{
