@@ -207,13 +207,15 @@ async function loadSplat(url,label) {
   if(!url)return;
   exitFirstPerson();
   setStatus('Loading '+label+'…');
-  const asset=new pc.Asset(label,'gsplat',{url,filename:label});
-  app.assets.add(asset);
+  let asset=null;
   try {
-    await new Promise((resolve,reject)=>{
-      asset.once('load',resolve);
-      asset.once('error',err=>reject(err||new Error('Splat load failed')));
-      app.assets.load(asset);
+    // PlayCanvas provides this specifically for blob URLs whose extension
+    // cannot be inferred from the temporary URL itself.
+    asset=await new Promise((resolve,reject)=>{
+      app.assets.loadFromUrlAndFilename(url,label,'gsplat',(err,loadedAsset)=>{
+        if(err) reject(err);
+        else resolve(loadedAsset);
+      });
     });
     if(currentEntity) currentEntity.destroy();
     if(currentAsset) { app.assets.remove(currentAsset); currentAsset.unload(); }
@@ -239,7 +241,7 @@ async function loadSplat(url,label) {
     dissolveProgress=0;gsplatMaterial.setParameter('uDissolveProgress',0.0);gsplatMaterial.update();animateDissolve(true);
   } catch(err) {
     console.error(err);
-    app.assets.remove(asset);
+    if(asset){app.assets.remove(asset);asset.unload();}
     const detail=err?.message||String(err||'Unknown loader error');
     setStatus('Could not load '+label+': '+detail);
     console.error('Gaussian splat load failed:',{label,url,error:err});
